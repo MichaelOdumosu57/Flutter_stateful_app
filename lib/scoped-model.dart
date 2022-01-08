@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
-void main() {
-  runApp(App());
-}
+// void main() {
+//   runApp(App());
+// }
 
 const List<String> urls = [
   "https://live.staticflickr.com/65535/50489498856_67fbe52703_b.jpg",
