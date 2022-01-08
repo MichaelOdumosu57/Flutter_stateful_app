@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
-// void main() {
-//   runApp(App());
-// }
+void main() {
+  runApp(App());
+}
 
 const List<String> urls = [
   "https://live.staticflickr.com/65535/50489498856_67fbe52703_b.jpg",
@@ -12,9 +12,20 @@ const List<String> urls = [
   "https://live.staticflickr.com/65535/50488789168_ff9f1f8809.jpg"
 ];
 
-class App extends StatefulWidget {
+class App extends StatelessWidget {
   @override
-  AppState createState() => AppState();
+  Widget build(BuildContext context) {
+    return ScopedModel<AppState>(
+      model: AppState(),
+      child: MaterialApp(
+          title: 'Photo Viewer',
+          home: ScopedModelDescendant<AppState>(
+            builder: (context, child, model) {
+              return GalleryPage(title: "Image Gallery", model: model);
+            },
+          )),
+    );
+  }
 }
 
 class PhotoState {
@@ -26,68 +37,53 @@ class PhotoState {
   PhotoState(this.url, {selected, display, tags});
 }
 
-class AppState extends State<App> {
+class AppState extends Model {
   bool isTagging = false;
 
   List<PhotoState> photoStates = List.of(urls.map((url) => PhotoState(url)));
   Set<String> tags = {"all", "nature", "cat"};
 
+  static AppState of(BuildContext context) {
+    return ScopedModel.of<AppState>(context);
+  }
+
   void selectTag(String tag) {
-    setState(() {
-      if (isTagging) {
-        if (tag != "all") {
-          photoStates.forEach((element) {
-            if (element.selected == true) {
-              element.tags.add(tag);
-            }
-          });
-        }
-        toggleTagging("");
-      } else {
+    if (isTagging) {
+      if (tag != "all") {
         photoStates.forEach((element) {
-          element.display = tag == "all" ? true : element.tags.contains(tag);
+          if (element.selected == true) {
+            element.tags.add(tag);
+          }
         });
       }
-    });
+      toggleTagging("");
+    } else {
+      photoStates.forEach((element) {
+        element.display = tag == "all" ? true : element.tags.contains(tag);
+      });
+    }
+    notifyListeners();
   }
 
   void toggleTagging(String url) {
-    setState(() {
-      isTagging = !isTagging;
-      photoStates.forEach((element) {
-        if (isTagging && element.url == url) {
-          element.selected = true;
-        } else {
-          element.selected = false;
-        }
-      });
+    isTagging = !isTagging;
+    photoStates.forEach((element) {
+      if (isTagging && element.url == url) {
+        element.selected = true;
+      } else {
+        element.selected = false;
+      }
     });
+    notifyListeners();
   }
 
   void onPhotoSelect(String url, bool? selected) {
-    setState(() {
-      photoStates.forEach((element) {
-        if (element.url == url) {
-          element.selected = selected;
-        }
-      });
+    photoStates.forEach((element) {
+      if (element.url == url) {
+        element.selected = selected;
+      }
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'Photo Viewer',
-        home: MyInheritedWidget(
-          model: this,
-          child: Builder(builder: (BuildContext innerContext) {
-            return GalleryPage(
-                title: "Image Gallery",
-                model: innerContext
-                    .dependOnInheritedWidgetOfExactType<MyInheritedWidget>()!
-                    .model);
-          }),
-        ));
+    notifyListeners();
   }
 }
 
@@ -108,7 +104,7 @@ class GalleryPage extends StatelessWidget {
               .where((ps) => ps.display ?? true)
               .map((ps) => Photo(
                     state: ps,
-                    model: model,
+                    model: AppState.of(context),
                   )))),
       drawer: Drawer(
           child: ListView(
@@ -159,21 +155,4 @@ class Photo extends StatelessWidget {
         padding: EdgeInsets.only(top: 10),
         child: Stack(alignment: Alignment.center, children: children));
   }
-}
-
-class MyInheritedWidget extends InheritedWidget {
-  final AppState model;
-
-  MyInheritedWidget(
-      {/*required Key key,*/ required Widget child, required this.model})
-      : super(/*key: key,*/ child: child);
-
-  // static AppState of(BuildContext context) {
-  //   return context
-  //       .dependOnInheritedWidgetOfExactType<MyInheritedWidget>()!
-  //       .model;
-  // }
-
-  @override
-  bool updateShouldNotify(_) => true;
 }
