@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
-  runApp(ChangeNotifierProvider(create: (_) => AppState(), child: App()));
-}
+// void main() {
+//   runApp(ChangeNotifierProvider(create: (_) => AppState(), child: App()));
+// }
 
 const List<String> urls = [
   "https://live.staticflickr.com/65535/50489498856_67fbe52703_b.jpg",
